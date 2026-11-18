@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<title>Analyse de LumiMath</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Rapport de lecture : synthèse, flux enfant, preuves puis décisions prioritaires. */
+:root {
+  --bg: #FFFFFF;
+  --surface: #F7F8FA;
+  --ink: #111827;
+  --muted: #4B5563;
+  --line: #E5E7EB;
+  --accent: #15803D;
+  --display: 'Fredoka', 'Trebuchet MS', system-ui, sans-serif;
+  --body: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --utility: ui-monospace, 'Cascadia Code', Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111827;
+    --surface: #1D2737;
+    --ink: #F3F4F6;
+    --muted: #B8C3D3;
+    --line: #344155;
+    --accent: #86EFAC;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111827;
+  --surface: #1D2737;
+  --ink: #F3F4F6;
+  --muted: #B8C3D3;
+  --line: #344155;
+  --accent: #86EFAC;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.65 var(--body); }
+.report { max-width: 1000px; margin-inline: auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 44px 56px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.2; text-wrap: balance; }
+h1 { font-size: clamp(2rem, 5vw, 2.75rem); margin: 0; }
+h2 { font-size: 1.65rem; margin: 0; }
+h3 { font-size: 1.15rem; margin: 0; }
+p { margin: 0; max-width: 72ch; }
+a { color: var(--accent); text-underline-offset: 4px; }
+a:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+header { display: grid; gap: 18px; padding-block: 0 28px; }
+.eyebrow { font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 800; color: var(--accent); }
+.meta, .note, .source { color: var(--muted); font-size: 0.875rem; }
+.lead { font-size: 1.15rem; }
+.verdict { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 24px; display: grid; gap: 12px; }
+nav { display: flex; gap: 12px 22px; flex-wrap: wrap; font-size: 0.9rem; border-block: 1px solid var(--line); padding-block: 16px; }
+section { display: grid; gap: 22px; padding-block: 34px; border-bottom: 1px solid var(--line); }
+.stack { display: grid; gap: 14px; }
+ul, ol { margin: 0; padding-left: 1.25rem; display: grid; gap: 8px; }
+li, article, .table-wrap { min-width: 0; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; counter-reset: journey; }
+.flow > div { border: 1px solid var(--line); background: var(--surface); border-radius: 16px; padding: 16px; display: grid; align-content: start; gap: 8px; }
+.flow > div::before { counter-increment: journey; content: counter(journey); font: 700 0.875rem var(--utility); color: var(--accent); }
+.flow p { font-size: 0.875rem; color: var(--muted); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.925rem; }
+th { text-align: left; background: var(--surface); font-weight: 800; }
+th, td { padding: 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.pass { color: var(--accent); font-weight: 800; }
+code { font-family: var(--utility); font-size: 0.82em; overflow-wrap: anywhere; }
+.source { padding-top: 4px; }
+.findings { display: grid; gap: 24px; }
+.finding { display: grid; gap: 10px; }
+.priority { font-family: var(--utility); font-size: 0.775rem; font-weight: 700; color: var(--accent); }
+.finding + .finding { padding-top: 24px; border-top: 1px solid var(--line); }
+footer { padding-top: 28px; color: var(--muted); font-size: 0.875rem; display: grid; gap: 10px; }
+@media (max-width: 680px) { .grid, .flow { grid-template-columns: 1fr; } .report { padding-block: 26px 36px; } .verdict { padding: 20px; } th, td { padding: 10px 8px; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<div class="report">
+  <header>
+    <p class="eyebrow">Rapport technique et produit · Analyse locale</p>
+    <h1>Analyse de LumiMath</h1>
+    <p class="lead">Une base de prototype cohérente pour apprendre les mathématiques par observation et manipulation, avec plusieurs corrections nécessaires avant un lancement public.</p>
+    <p class="meta">Périmètre : 7 documents de passation, architecture, composants, logique métier, curriculum, serveur, scripts et build. Aucun fichier source modifié. Aucun appel à Gemini ni déploiement externe.</p>
+    <div class="verdict">
+      <h2>Verdict</h2>
+      <p><strong>Conserver et faire évoluer l’existant.</strong> Le parcours principal est développé, la séparation des responsabilités est saine et les vérifications techniques passent. Le projet convient à une démonstration et à un pilote encadré après correction des problèmes pédagogiques identifiés.</p>
+      <p>Il ne constitue pas encore un programme complet CP–6e ni une application prête à être exploitée publiquement avec IA. Les enjeux prioritaires sont la justesse des retours, la fiabilité des indicateurs de maîtrise, la validation mobile et la sécurisation du tuteur.</p>
+    </div>
+  </header>
+
+  <nav aria-label="Sommaire du rapport">
+    <a href="#produit">Produit</a><a href="#architecture">Architecture</a><a href="#validation">Vérifications</a><a href="#defauts">Défauts</a><a href="#limites">Limites</a><a href="#priorites">Priorités</a>
+  </nav>
+
+  <section id="produit">
+    <h2>Ce que fait réellement le produit</h2>
+    <p>LumiMath est une PWA francophone destinée aux enfants de 6 à 12 ans. Elle vise la compréhension active plutôt qu’une accumulation de quiz : l’enfant observe une représentation, agit sur des objets, vérifie une réponse et peut demander une explication. Les erreurs ne retirent ni vie ni cœur.</p>
+    <div class="flow">
+      <div><h3>Profil</h3><p>Prénom et classe, ou accès rapide au mode démo.</p></div>
+      <div><h3>Parcours</h3><p>Accueil, 5 chapitres, 10 notions et premières notions accessibles dans chaque domaine.</p></div>
+      <div><h3>Leçon</h3><p>Découverte, manipulation, question et application, avec feedback et accès facultatif à « Pourquoi ? ».</p></div>
+      <div><h3>Bilan</h3><p>Précision, étoiles, XP, badges, révision des erreurs et sauvegarde locale.</p></div>
+    </div>
+    <div class="grid">
+      <article class="stack"><h3>Catalogue</h3><ul><li>Addition : réunir deux groupes et compléter un total.</li><li>Soustraction : retirer et mesurer un écart.</li><li>Multiplication : grilles et facteurs.</li><li>Division : partage et lien avec la multiplication.</li><li>Géométrie : polygones et angles droits.</li></ul></article>
+      <article class="stack"><h3>Interaction</h3><ul><li>5 manipulateurs : paniers, retrait, grille, partage et figures SVG.</li><li>QCM, cases à compléter, comparaisons, classement et associations.</li><li>3 défis quotidiens, 5 badges, effets sonores synthétisés.</li><li>Mascotte vectorielle originale, animée selon 8 états.</li></ul></article>
+    </div>
+    <p class="note"><strong>Clarification importante :</strong> les « 7 étapes » décrivent un cycle pédagogique, pas 7 exercices successifs dans le moteur. Chaque notion contient 4 objets Exercise, dont une découverte non notée et 3 activités évaluées. Le curriculum génère 60 combinaisons notion/classe, mais seulement 10 scénarios de base ; ce ne sont pas 60 leçons distinctes.</p>
+    <p class="source">Sources : <code>src/data/curriculum.ts</code>, <code>src/components/LessonScreen.tsx:90–123</code>, <code>src/utils/gameLogic.ts:12–197</code>.</p>
+  </section>
+
+  <section id="architecture">
+    <h2>Architecture et flux de données</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Couche</th><th>Responsabilité</th><th>Appréciation</th></tr></thead>
+      <tbody>
+        <tr><td><code>src/types/math.ts</code></td><td>Contrats des exercices, notions, progression et réponses du tuteur.</td><td>Types partagés clairs.</td></tr>
+        <tr><td><code>src/data/curriculum.ts</code></td><td>Contenu et paramètres numériques par classe.</td><td>API simple ; module à découper lors de l’extension du catalogue.</td></tr>
+        <tr><td><code>src/utils/gameLogic.ts</code></td><td>Déblocage, XP, étoiles, badges, défis et changement de jour.</td><td>Logique pure, testable sans navigateur.</td></tr>
+        <tr><td><code>src/App.tsx</code></td><td>État global, navigation par écrans, persistance et configuration serveur.</td><td>Approche adaptée au prototype ; aucune session de leçon persistée.</td></tr>
+        <tr><td><code>src/components/</code></td><td>Écrans, interactions et diagrammes.</td><td>Design cohérent, mais deux gros orchestrateurs à surveiller.</td></tr>
+        <tr><td><code>server.ts</code></td><td>Express, Vite en développement, fichiers dist en production, endpoints santé/configuration/tuteur.</td><td>Clé IA côté serveur ; protection de l’endpoint à renforcer.</td></tr>
+      </tbody>
+    </table></div>
+    <p><strong>Flux principal :</strong> profil → génération d’exercices → évaluation dans LessonScreen → bilan transmis à App → application des règles pures → sauvegarde de UserState dans <code>localStorage</code>, sous <code>lumimath_brilliant_v2</code>.</p>
+    <p><strong>Flux du tuteur :</strong> « Pourquoi ? » → explication immédiate issue de l’exercice → enrichissement local, ou <code>POST /api/tutor</code> si une clé est annoncée par <code>/api/config</code> → réponse Gemini ou repli déterministe en cas d’erreur.</p>
+    <p><strong>Stack réellement installée :</strong> React 19.3.1, TypeScript 7.0.2, Vite 8.3.8, Tailwind 4.3.5, Express 4.22.3, tsx 4.23.15, vite-plugin-pwa 2.0.0 et @google/genai 3.5.0. Les versions installées diffèrent parfois des versions initiales de la passation, ce qui est compatible avec les plages <code>^</code> du manifeste.</p>
+    <p class="note">26 fichiers dans src, environ 8 818 lignes en comptant les lignes vides. Environ 2 051 lignes décrivent la géométrie vectorielle extraite : cette donnée générée ne doit pas être confondue avec de la complexité métier. Les principaux modules manuels sont curriculum (1 135 lignes), InteractiveManipulator (804) et LessonScreen (663).</p>
+  </section>
+
+  <section id="validation">
+    <h2>Vérifications réalisées</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Contrôle</th><th>Résultat</th><th>Limite de la conclusion</th></tr></thead>
+      <tbody>
+        <tr><td><code>npm run lint</code></td><td class="pass">Passe</td><td>Vérifie TypeScript, pas un lint ESLint.</td></tr>
+        <tr><td><code>tsc --noEmit --strict</code></td><td class="pass">Passe</td><td>Le tsconfig ne fixe pourtant pas explicitement strict: true.</td></tr>
+        <tr><td><code>tsx --test src/utils/gameLogic.test.ts</code></td><td class="pass">5 tests / 5 passent</td><td>Couverture limitée ; n’atteste pas la justesse de tous les feedbacks ou interactions.</td></tr>
+        <tr><td><code>npm run build</code></td><td class="pass">Passe, PWA générée</td><td>Deux avertissements : bundle JS &gt; 500 Ko et utilisation de __dirname dans la configuration Vite.</td></tr>
+        <tr><td><code>GET /api/health</code></td><td class="pass">HTTP 200</td><td>Contrôle d’un serveur de développement déjà actif.</td></tr>
+        <tr><td><code>GET /api/config</code></td><td>Pas de clé Gemini ni d’URL publique annoncées</td><td>Aucun appel Gemini exécuté ; disponibilité du modèle non vérifiée.</td></tr>
+        <tr><td>Contenu sur les 6 classes</td><td>Doublons de choix et d’associations reproduits</td><td>Contrôles complémentaires ad hoc, non ajoutés à la suite permanente.</td></tr>
+        <tr><td>Chrome mobile 390×844</td><td class="pass">Parcours testés sans overflow ni erreur JavaScript capturée</td><td>Build local isolé ; polices distantes et API tuteur bloquées, service worker contourné. Installation physique iOS/Android non testée.</td></tr>
+      </tbody>
+    </table></div>
+    <p><strong>Parcours exercés :</strong> onboarding, accueil, profil, défis, parcours, leçon d’addition complète, feedback d’erreur et de réussite, explication locale, bilan, révision, association, grille de multiplication en 6e et cible SVG de géométrie. Une session à 2 réussites sur 3 enregistre bien 75 XP, 2 étoiles et 67 % de précision. Les barres de 42 et 18 mesurent chacune 282 px ; le refus de la carte « 40 » et le texte « vaut exactement &lt;. » sont reproduits dans le navigateur.</p>
+    <p class="note">Le build génère un bundle JS de 550,98 Ko (160,71 Ko gzip) et un précache de 22 entrées, soit environ 1,80 Mio. Environ 1,21 Mo de captures de référence sont copiées et mises en cache alors qu’elles ne sont pas référencées dans les composants de l’application.</p>
+  </section>
+
+  <section id="defauts">
+    <h2>Défauts concrets et risques à traiter</h2>
+    <div class="findings">
+      <article class="finding"><p class="priority">P1 · Justesse pédagogique</p><h3>Des réponses identiques ne sont pas interchangeables dans les associations</h3><p>En addition CE2, <code>15 + 25</code> et <code>25 + 15</code> produisent deux cartes « 40 ». La vérification compare les identifiants internes, pas les valeurs. Choisir la mauvaise carte « 40 » pour une addition égale à 40 provoque donc un retour d’erreur. Des doublons existent en addition à toutes les classes et en multiplication lorsque les facteurs sont égaux.</p><p><strong>Action :</strong> autoriser toute carte mathématiquement équivalente disponible, ou générer des résultats distincts. Ajouter une validation de contenu par classe.</p><p class="source"><code>src/data/curriculum.ts:303–307, 692–696</code> · <code>src/components/LessonScreen.tsx:141–156</code></p></article>
+      <article class="finding"><p class="priority">P1 · Fiabilité du bilan</p><h3>Les erreurs d’association ne comptent pas dans la précision</h3><p>Une association incorrecte ne produit qu’un son et un flash. Elle n’augmente pas evaluatedCount et n’ajoute aucun MistakeRecord. Lorsque toutes les paires sont finalement reliées, l’exercice est compté comme une réussite. Une session peut ainsi obtenir 100 % et le badge « sans faute » malgré des erreurs d’association.</p><p><strong>Action :</strong> distinguer réussite finale, première tentative et erreurs, sans introduire de mécanisme punitif.</p><p class="source"><code>src/components/LessonScreen.tsx:106–121, 141–156</code> · <code>src/utils/gameLogic.ts:319–332</code></p></article>
+      <article class="finding"><p class="priority">P1 · Représentation mathématique</p><h3>Deux barres de valeurs différentes peuvent avoir la même longueur</h3><p>La première slide de « Trouver la différence » compare 42 à 18 pour les classes CE2–6e. Chaque ligne de barres occupe séparément toute la largeur : une ligne contenant un seul segment reste pleine largeur, quelle que soit sa valeur flex. Le diagramme ne représente donc pas visuellement l’écart qu’il doit enseigner.</p><p><strong>Action :</strong> utiliser une même échelle pour les deux lignes, avec des longueurs proportionnelles aux valeurs.</p><p class="source"><code>src/data/curriculum.ts:433–440</code> · <code>src/components/VisualStage.tsx:279–307</code></p></article>
+      <article class="finding"><p class="priority">P1 · Explications</p><h3>Le tuteur hors ligne insère parfois une valeur technique dans une phrase mathématique</h3><p>Le repli dépend du domaine et injecte directement correctAnswer. Pour une comparaison en addition, il peut afficher « leur longueur totale vaut exactement &lt;. ». Pour une association, la valeur peut être <code>all-matched</code> ; pour la construction d’une grille, <code>3x4</code>. Ces chaînes ne désignent pas toujours une quantité.</p><p><strong>Action :</strong> partir de simpleExplanation et adapter le repli au type d’exercice ainsi qu’à la notion, pas seulement au domaine.</p><p class="source"><code>src/utils/tutorEngine.ts:10–79</code></p></article>
+      <article class="finding"><p class="priority">P1 · Progression quotidienne</p><h3>Le changement de jour n’est traité qu’au chargement</h3><p>syncDailyRollover est appelé lors de loadUserState, sans synchronisation au retour de veille, changement d’onglet ou validation d’une leçon. Une PWA laissée ouverte après minuit conserve les compteurs et les récompenses déjà réclamées du jour précédent jusqu’à son rechargement.</p><p><strong>Action :</strong> synchroniser au réveil de l’application et avant chaque mutation métier ; tester le passage de date.</p><p class="source"><code>src/App.tsx:35–50, 153–184</code> · <code>src/utils/gameLogic.ts:388–402</code></p></article>
+      <article class="finding"><p class="priority">P1 · Vocabulaire de maîtrise</p><h3>Une leçon à 0 % est tout de même affichée comme maîtrisée</h3><p>Le moteur marque une notion completed, verse le bonus et débloque la suivante même si aucune activité n’est réussie. Le bilan affiche toujours « Notion maîtrisée ». La complétion peut rester permissive, mais la maîtrise ne doit pas être confondue avec le fait d’avoir parcouru la leçon.</p><p><strong>Action :</strong> distinguer « leçon terminée » et « notion maîtrisée », puis recommander une révision selon la précision. Le besoin n’est pas de punir l’erreur.</p><p class="source"><code>src/utils/gameLogic.ts:298–313</code> · <code>src/components/VictoryScreen.tsx:87–90</code></p></article>
+      <article class="finding"><p class="priority">P1 avant exposition de l’IA · Sécurité et qualité</p><h3>L’endpoint du tuteur n’est pas suffisamment encadré pour une ouverture publique</h3><p>Le code ne prévoit ni limitation de fréquence ni quota explicite. Les entrées sont peu validées ; la réponse JSON est acceptée sans contrôle complet de ses champs, du nombre de choix ou de l’appartenance de la réponse aux choix. La clé reste correctement côté serveur, mais une configuration publique nécessitera une protection contre la consommation abusive et une vérification des contenus destinés aux enfants.</p><p><strong>Action :</strong> limiter l’usage, borner et valider les entrées/sorties, ajouter un délai maximal et un repli immédiat, puis tester le modèle réellement accessible.</p><p class="source"><code>server.ts:44–57, 86–126</code> · <code>src/utils/tutorEngine.ts:97–122</code></p></article>
+      <article class="finding"><p class="priority">P1 avant déploiement · Hébergement</p><h3>Les configurations Vercel et Netlify ne déploient pas le serveur Express</h3><p>Elles construisent et publient dist sans fonctions API. Le frontend peut fonctionner avec son repli local, mais elles n’assurent pas <code>/api/tutor</code>, <code>/api/config</code> et <code>/api/health</code>.</p><p><strong>Action :</strong> choisir un hébergement Node/Express ou ajouter les fonctions serverless adaptées, puis tester explicitement les API de production.</p><p class="source"><code>vercel.json:3–6</code> · <code>netlify.toml:1–7</code></p></article>
+      <article class="finding"><p class="priority">P2 · Installation et accessibilité</p><h3>Plusieurs garanties mobiles restent incomplètes</h3><ul><li>Le hook d’installation est instancié séparément dans le shell et le profil. Si beforeinstallprompt est émis avant l’ouverture du profil, cette nouvelle instance ne conserve pas l’événement.</li><li>Les boutons de grille font 40×40 px et les boutons +/− 28×28 px, sous la règle de 44 px du projet.</li><li>Les cibles SVG de géométrie ont des handlers de clic mais pas de navigation clavier.</li><li>Le viewport interdit le zoom ; les confettis Canvas ne sont pas explicitement désactivés pour reduced-motion.</li></ul><p><strong>Action :</strong> centraliser l’état d’installation, agrandir les cibles sans casser le 390 px, assurer le clavier et le zoom, puis vérifier Safari et Chrome sur appareils réels.</p><p class="source"><code>src/hooks/usePWAInstall.ts:8–38</code> · <code>src/components/ProfileTab.tsx:35–36</code> · <code>src/components/exercises/InteractiveManipulator.tsx:395–471, 663–778</code> · <code>index.html:5</code> · <code>src/components/VictoryScreen.tsx:43–50</code></p></article>
+    </div>
+  </section>
+
+  <section id="limites">
+    <h2>Limites normales du prototype</h2>
+    <ul><li><strong>Couverture pédagogique :</strong> pas de parcours complet par classe, de fractions, de décimaux, de mesures ou de problèmes guidés avancés. L’adaptation ajuste principalement les nombres, parfois selon deux groupes d’âge.</li><li><strong>Pas d’adaptation aux performances :</strong> aucune remédiation personnalisée persistante ni planification de révisions espacées. Les mêmes notions rejouent les mêmes paramètres pour une même classe.</li><li><strong>Un seul profil local :</strong> pas de compte, synchronisation, sauvegarde distante ou export de progression. Le changement de classe conserve les acquis des mêmes identifiants de notions.</li><li><strong>Session non persistée :</strong> quitter ou recharger une leçon perd son état et ses erreurs ; seule la progression de fin de session est conservée.</li><li><strong>Géométrie limitée :</strong> build-shape est typé mais non implémenté ; seuls le comptage du pentagone et les angles du carré sont manipulables.</li><li><strong>Tests permanents incomplets :</strong> 5 tests métier, aucun script npm test, aucune suite permanente de composants ou de parcours E2E.</li><li><strong>Export sans dépôt Git :</strong> aucun historique versionné accessible dans ce dossier. bun.lock est présent, package-lock.json absent.</li><li><strong>Scripts Windows :</strong> <code>NODE_ENV=production tsx server.ts</code> utilise une syntaxe POSIX. Avec npm sous cmd.exe, elle échoue ; <code>clean</code> utilise également rm -rf. Le développement et le build testés passent.</li></ul>
+    <p class="note">Ces limites ne justifient pas une réécriture. Elles doivent être traitées selon le public et le mode de distribution visés.</p>
+  </section>
+
+  <section id="priorites">
+    <h2>Ordre de travail recommandé</h2>
+    <ol><li><strong>Rendre les retours pédagogiques fiables.</strong> Corriger les associations équivalentes, les doublons, la précision des premières tentatives, les barres et le repli du tuteur. Distinguer terminé et maîtrisé.</li><li><strong>Stabiliser le socle.</strong> Rollover au réveil, script npm test, mode strict explicite, scripts compatibles Windows, stratégie de lockfile et versionnement Git.</li><li><strong>Automatiser les parcours critiques.</strong> Tests onboarding → leçon → explication → bilan → persistance ; assertions de zéro overflow à 390×844, de bonnes réponses et d’absence d’erreurs console.</li><li><strong>Valider le produit sur smartphone.</strong> Installation iOS/Android, relance hors ligne, cibles tactiles, clavier, zoom, mouvement réduit et retour de veille.</li><li><strong>Choisir l’hébergement et encadrer l’IA.</strong> Node ou serverless, limites d’usage, schémas de validation, repli sous délai maximal et contrôle des explications.</li><li><strong>Étendre les contenus sur des objectifs d’apprentissage.</strong> Parcours CP dédié, fractions et problèmes pour les plus grands, variantes d’exercices et suivi de maîtrise par classe. Ajouter les multi-profils et la synchronisation seulement si le pilote en montre le besoin.</li></ol>
+    <p><strong>À préserver :</strong> le design blanc/vert/sombre, la séparation données–logique–UI, le repli local, la mascotte SVG originale et l’absence de sanction. Ajouter une seconde mascotte ou multiplier les animations n’est pas prioritaire avant la fiabilisation pédagogique.</p>
+  </section>
+
+  <footer>
+    <p>Ce rapport distingue les contrôles exécutés, les défauts reproduits ou directement établis dans le code et les fonctionnalités qui restent à tester. Il ne constitue ni une certification de sécurité ni une validation pédagogique auprès d’enfants.</p>
+    <p>Document local indépendant, destiné à la personne qui a demandé l’analyse. Aucun lien public ou privé hébergé n’a été créé.</p>
+  </footer>
+</div>
+</body>
+</html>

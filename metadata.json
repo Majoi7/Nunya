@@ -1,0 +1,6 @@
+{
+  "name": "LumiMath",
+  "description": "Application mobile éducative et gamifiée pour apprendre les mathématiques en s'amusant (6 à 12 ans).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

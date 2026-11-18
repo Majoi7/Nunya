@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-display: 'Fredoka', system-ui, -apple-system, sans-serif;
+    --font-body: 'Nunito', system-ui, -apple-system, sans-serif;
+    --color-ink: #111827;
+    --color-muted: #9CA3AF;
+    --color-success: #15803D;
+    --color-xp: #EAB308;
+    --color-xp-fill: #FACC15;
+    --color-warning: #F97316;
+    --color-error: #DC2626;
+    --touch-target: 44px;
+  }
+
+  html,
+  body {
+    font-family: var(--font-body);
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+  }
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.pb-safe {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+.pt-safe {
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+}
+
+@keyframes gentle-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: gentle-shake 0.36s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-shake {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Shared decorative icons: fixed footprint, no pointer/focus interception. */
+.lottie-icon {
+  --lottie-primary: currentColor;
+  --lottie-secondary: currentColor;
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  vertical-align: middle;
+  pointer-events: none;
+  line-height: 0;
+}
+.lottie-icon--ink { --lottie-primary: var(--color-ink); --lottie-secondary: #6B7280; color: var(--color-ink); }
+.lottie-icon--muted { --lottie-primary: var(--color-muted); --lottie-secondary: #D1D5DB; color: var(--color-muted); }
+.lottie-icon--inverse { --lottie-primary: #FFFFFF; --lottie-secondary: #FFFFFF; color: #FFFFFF; }
+.lottie-icon--success { --lottie-primary: var(--color-success); --lottie-secondary: #22C55E; color: var(--color-success); }
+.lottie-icon--xp { --lottie-primary: var(--color-xp); --lottie-secondary: var(--color-xp-fill); color: var(--color-xp); }
+.lottie-icon--warning { --lottie-primary: var(--color-warning); --lottie-secondary: #FB923C; color: var(--color-warning); }
+.lottie-icon--error { --lottie-primary: var(--color-error); --lottie-secondary: #EF4444; color: var(--color-error); }
+.lottie-icon__animation,
+.lottie-icon__fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.lottie-icon__animation > svg { width: 100%; height: 100%; display: block; }
+.lottie-icon[data-lottie-status="loading"] .lottie-icon__animation,
+.lottie-icon[data-lottie-status="fallback"] .lottie-icon__animation { visibility: hidden; }
+.lottie-icon--muted .lottie-icon__animation { filter: grayscale(1); opacity: 0.65; }
+.lottie-icon--inverse .lottie-icon__animation { filter: brightness(0) invert(1); }
+
+@layer base {
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 3px solid var(--color-ink);
+    outline-offset: 3px;
+  }
+}
+
+/* Clean custom scrollbar inside phone simulation */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
